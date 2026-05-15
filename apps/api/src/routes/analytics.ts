@@ -11,7 +11,10 @@ analyticsRouter.get('/overview', authenticate, asyncHandler(async (req: AuthRequ
   });
 
   if (!analytics) {
-    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      include: { _count: { select: { followers: true, following: true } } }
+    });
     const newAnalytics = await prisma.userAnalytics.create({
       data: {
         userId: req.user!.id,
@@ -29,7 +32,7 @@ analyticsRouter.get('/posts', authenticate, asyncHandler(async (req: AuthRequest
   const posts = await prisma.post.findMany({
     where: { authorId: req.user!.id, isDraft: false },
     take: 30,
-    orderBy: { publishedAt: 'desc' },
+    orderBy: { createdAt: 'desc' },
     include: {
       analytics: true,
       _count: { select: { likes: true, comments: true } },

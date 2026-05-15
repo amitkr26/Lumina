@@ -50,9 +50,16 @@ export const logger = winston.createLogger({
 // Redis client
 export const redisClient = createClient({
   url: config.redisUrl,
+  socket: {
+    connectTimeout: 3000,
+    reconnectStrategy: (retries) => {
+      if (retries > 3) return false;
+      return Math.min(retries * 100, 3000);
+    },
+  },
 });
 
-redisClient.on('error', (err) => logger.error('Redis Client Error:', err));
+redisClient.on('error', (err) => logger.warn('Redis unavailable, continuing without cache:', err.message));
 redisClient.on('connect', () => logger.info('Redis connected'));
 
 // Socket.IO

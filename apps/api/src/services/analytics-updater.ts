@@ -17,8 +17,8 @@ export async function updateUserAnalytics(userId: string): Promise<void> {
       followerCount,
       followingCount,
     ] = await Promise.all([
-      prisma.post.count({ where: { authorId: userId, status: 'PUBLISHED' } }),
-      prisma.reel.count({ where: { authorId: userId, status: 'PUBLISHED' } }),
+      prisma.post.count({ where: { authorId: userId, isDraft: false } }),
+      prisma.reel.count({ where: { authorId: userId, visibility: 'PUBLIC' } }),
       prisma.story.count({ where: { authorId: userId } }),
       prisma.like.count({ where: { post: { authorId: userId } } }),
       prisma.comment.count({ where: { post: { authorId: userId } } }),
@@ -28,7 +28,7 @@ export async function updateUserAnalytics(userId: string): Promise<void> {
       prisma.share.count({ where: { reel: { authorId: userId } } }),
       prisma.reel.aggregate({
         where: { authorId: userId },
-        _sum: { views: true },
+        _sum: { viewCount: true },
       }),
       prisma.follow.count({ where: { followingId: userId } }),
       prisma.follow.count({ where: { followerId: userId } }),
@@ -50,30 +50,28 @@ export async function updateUserAnalytics(userId: string): Promise<void> {
     await prisma.userAnalytics.upsert({
       where: { userId },
       update: {
-        postCount,
-        reelCount,
-        storyCount,
+        totalPosts: postCount,
+        totalReels: reelCount,
+        totalStories: storyCount,
         totalLikes: totalPostLikes + totalReelLikes,
         totalComments: totalPostComments + totalReelComments,
-        totalShares: totalPostShares + totalReelShares,
-        totalViews: totalReelViews._sum.views ?? 0,
-        followerCount,
-        followingCount,
-        avgEngagementRate,
+        totalFollowers: followerCount,
+        totalFollowing: followingCount,
+        totalViews: totalReelViews._sum.viewCount || 0,
+        avgEngagement: avgEngagementRate,
         updatedAt: new Date(),
       },
       create: {
         userId,
-        postCount,
-        reelCount,
-        storyCount,
+        totalPosts: postCount,
+        totalReels: reelCount,
+        totalStories: storyCount,
         totalLikes: totalPostLikes + totalReelLikes,
         totalComments: totalPostComments + totalReelComments,
-        totalShares: totalPostShares + totalReelShares,
-        totalViews: totalReelViews._sum.views ?? 0,
-        followerCount,
-        followingCount,
-        avgEngagementRate,
+        totalFollowers: followerCount,
+        totalFollowing: followingCount,
+        totalViews: totalReelViews._sum.viewCount || 0,
+        avgEngagement: avgEngagementRate,
       },
     });
 
@@ -130,33 +128,23 @@ export async function updatePostAnalytics(postId: string): Promise<void> {
     await prisma.postAnalytics.upsert({
       where: { postId },
       update: {
-        views: post.views,
-        likes: post._count.likes,
-        comments: post._count.comments,
-        shares: post._count.shares,
-        bookmarks: post._count.bookmarks,
-        engagementRate,
+        engagements: totalEngagement,
         updatedAt: new Date(),
       },
       create: {
         postId,
-        views: post.views,
-        likes: post._count.likes,
-        comments: post._count.comments,
-        shares: post._count.shares,
-        bookmarks: post._count.bookmarks,
-        engagementRate,
+        engagements: totalEngagement,
       },
     });
 
     await redisClient.set(
       `analytics:post:${postId}`,
       JSON.stringify({
-        views: post.views,
-        likes: post._count.likes,
-        comments: post._count.comments,
-        shares: post._count.shares,
-        engagementRate,
+        views: post.viewCount,
+        likes: post.likeCount,
+        comments: post.commentCount,
+        shares: post.shareCount,
+        bookmarks: post.saveCount,
       }),
       { EX: 900 }
     );
@@ -191,53 +179,39 @@ export async function updateReelAnalytics(reelId: string): Promise<void> {
     );
 
     const totalEngagement =
-      reel._count.likes +
-      reel._count.comments * 2 +
-      reel._count.shares * 3 +
-      reel._count.bookmarks * 4;
+      reel.likeCount +
+      reel.commentCount * 2 +
+      reel.shareCount * 3 +
+      reel.saveCount * 4;
 
     const engagementRate = totalEngagement / hoursSinceCreation;
 
-    const completionRate =
-      reel.duration && reel.avgWatchTime
-        ? reel.avgWatchTime / reel.duration
-        : 0;
+    const completionRate = 0; // Need to implement watch time tracking
 
     await prisma.reelAnalytics.upsert({
       where: { reelId },
       update: {
-        views: reel.views,
-        likes: reel._count.likes,
-        comments: reel._count.comments,
-        shares: reel._count.shares,
-        bookmarks: reel._count.bookmarks,
-        avgWatchTime: reel.avgWatchTime,
-        completionRate,
-        engagementRate,
+        plays: reel.playCount,
+        avgWatchTime: 0, // Need to implement watch time tracking
+        completionRate: 0,
+        engagements: totalEngagement,
         updatedAt: new Date(),
       },
       create: {
         reelId,
-        views: reel.views,
-        likes: reel._count.likes,
-        comments: reel._count.comments,
-        shares: reel._count.shares,
-        bookmarks: reel._count.bookmarks,
-        avgWatchTime: reel.avgWatchTime,
-        completionRate,
-        engagementRate,
+        plays: reel.playCount,
+        engagements: totalEngagement,
       },
     });
 
     await redisClient.set(
       `analytics:reel:${reelId}`,
       JSON.stringify({
-        views: reel.views,
-        likes: reel._count.likes,
-        comments: reel._count.comments,
-        shares: reel._count.shares,
-        completionRate,
-        engagementRate,
+        views: reel.viewCount,
+        likes: reel.likeCount,
+        comments: reel.commentCount,
+        shares: reel.shareCount,
+        bookmarks: reel.saveCount,
       }),
       { EX: 900 }
     );
@@ -273,7 +247,7 @@ export async function updateAllPostAnalytics(): Promise<void> {
 
     const posts = await prisma.post.findMany({
       select: { id: true },
-      where: { status: 'PUBLISHED' },
+      where: { isDraft: false },
     });
 
     for (const post of posts) {
@@ -292,7 +266,7 @@ export async function updateAllReelAnalytics(): Promise<void> {
 
     const reels = await prisma.reel.findMany({
       select: { id: true },
-      where: { status: 'PUBLISHED' },
+      where: { visibility: 'PUBLIC' },
     });
 
     for (const reel of reels) {

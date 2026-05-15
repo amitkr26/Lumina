@@ -24,3 +24,5 @@ temp/
 tmp/
 *.tgz
 .vercel
+**/*.db
+**/tsconfig.tsbuildinfo

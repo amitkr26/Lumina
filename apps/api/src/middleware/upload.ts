@@ -1,3 +1,4 @@
+import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { AppError } from './errorHandler.js';
 
@@ -27,7 +28,7 @@ const fileFilter = (
   mediaType: 'image' | 'video'
 ) => {
   return (
-    _req: Express.Request,
+    _req: Request,
     file: Express.Multer.File,
     cb: multer.FileFilterCallback
   ) => {
@@ -61,9 +62,9 @@ export const uploadMultipleImages = uploadImage.array('files', 10);
 
 export const handleMulterError = (
   err: unknown,
-  _req: Express.Request,
-  res: Express.Response,
-  next: Express.NextFunction
+  _req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {

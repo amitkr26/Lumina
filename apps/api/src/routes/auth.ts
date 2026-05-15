@@ -377,12 +377,9 @@ authRouter.get('/me', authenticate, asyncHandler(async (req: AuthRequest, res) =
 
 authRouter.get('/sessions', authenticate, asyncHandler(async (req: AuthRequest, res) => {
   const sessions = await prisma.session.findMany({
-    where: { userId: req.user!.id, isActive: true },
+    where: { userId: req.user!.id },
     select: {
       id: true,
-      userAgent: true,
-      ipAddress: true,
-      deviceInfo: true,
       expires: true,
       createdAt: true,
     },

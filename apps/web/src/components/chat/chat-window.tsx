@@ -64,7 +64,7 @@ export function ChatWindow({ conversationId, recipient, className }: ChatWindowP
     queryFn: async ({ pageParam }) => {
       const res = await chatApi.getMessages(conversationId, {
         limit: 50,
-        cursor: pageParam as string | null,
+        cursor: (pageParam as unknown as string) ?? undefined,
       });
       return res.data.data;
     },

@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
 import { prisma } from '@lumina/database';
 import { logger } from '../index.js';
-import { createNotification } from './notification.js';
+import { createNotification } from '../services/notification.js';
 
 interface SocketUser {
   id: string;

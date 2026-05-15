@@ -193,7 +193,7 @@ reelRouter.post('/:id/like', authenticate, strictRateLimiter, asyncHandler(async
 reelRouter.post('/:id/view', asyncHandler(async (req, res) => {
   const { id } = req.params;
   await prisma.reel.update({
-    where: { id },
+    where: { id: id as string },
     data: { playCount: { increment: 1 } },
   });
   res.json({ success: true });

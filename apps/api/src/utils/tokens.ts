@@ -11,13 +11,13 @@ export const generateTokens = (user: { id: string; email: string; username: stri
       isVerified: user.isVerified,
     },
     config.jwt.secret,
-    { expiresIn: config.jwt.expiresIn }
+    { expiresIn: config.jwt.expiresIn as any }
   );
 
   const refreshToken = jwt.sign(
     { id: user.id },
     config.jwt.refreshSecret,
-    { expiresIn: config.jwt.refreshExpiresIn }
+    { expiresIn: config.jwt.refreshExpiresIn as any }
   );
 
   return { accessToken, refreshToken };

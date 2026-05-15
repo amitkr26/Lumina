@@ -55,11 +55,11 @@ export function CommentSection({ postId, reelId, className }: CommentSectionProp
       const res = postId
         ? await commentApi.getPostComments(postId, {
             limit: 20,
-            cursor: pageParam as string | null,
+            cursor: (pageParam as unknown as string) ?? undefined,
           })
         : await commentApi.getReelComments(reelId!, {
             limit: 20,
-            cursor: pageParam as string | null,
+            cursor: (pageParam as unknown as string) ?? undefined,
           });
       return res.data.data;
     },

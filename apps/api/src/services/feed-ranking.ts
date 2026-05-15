@@ -89,20 +89,13 @@ export async function rankFeedPosts(userId: string): Promise<ScoredPost[]> {
   try {
     const posts = await prisma.post.findMany({
       where: {
-        status: 'PUBLISHED',
+        isDraft: false,
         author: {
           isBanned: false,
         },
       },
       include: {
         author: true,
-        _count: {
-          select: {
-            likes: true,
-            comments: true,
-            shares: true,
-          },
-        },
       },
       orderBy: { createdAt: 'desc' },
       take: 200,
@@ -121,7 +114,7 @@ export async function rankFeedPosts(userId: string): Promise<ScoredPost[]> {
       );
 
       const totalEngagements =
-        post._count.likes + post._count.comments * 2 + post._count.shares * 3;
+        (post.likeCount || 0) + (post.commentCount || 0) * 2 + (post.shareCount || 0) * 3;
       const engagementRate = totalEngagements / hoursSinceCreation;
       const normalizedEngagement = Math.min(engagementRate / 100, 1);
 
@@ -132,7 +125,7 @@ export async function rankFeedPosts(userId: string): Promise<ScoredPost[]> {
           ? 1
           : await getAuthorAffinityScore(userId, post.authorId);
 
-      const contentType = post.type ?? 'unknown';
+      const contentType = 'post';
       const contentPrefScore = contentPreferences[contentType] ?? 0;
 
       const authorDiversity = seenAuthors.has(post.authorId) ? 0 : 1;

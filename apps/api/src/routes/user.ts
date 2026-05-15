@@ -207,7 +207,7 @@ userRouter.patch('/profile', authenticate, strictRateLimiter, asyncHandler(async
 
   const user = await prisma.user.update({
     where: { id: req.user!.id },
-    data,
+    data: data as any,
     select: {
       id: true,
       username: true,
