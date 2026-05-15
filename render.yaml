@@ -23,7 +23,7 @@ services:
       - key: PORT
         value: 10000
 
-redis:
-  - name: lumina-redis
+  - type: redis
+    name: lumina-redis
     plan: free
     ipAllowList: []
