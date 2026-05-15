@@ -23,8 +23,7 @@ services:
       - key: PORT
         value: 10000
 
-databases:
+redis:
   - name: lumina-redis
-    type: redis
     plan: free
-    ipAllowList: [] # Only allow internal traffic
+    ipAllowList: []
