@@ -1,0 +1,49 @@
+{
+  "name": "@lumina/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lumina/database": "file:../../packages/database",
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "helmet": "^8.0.0",
+    "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "express-rate-limit": "^7.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "zod": "^3.24.1",
+    "ioredis": "^5.4.2",
+    "socket.io": "^4.8.1",
+    "multer": "^1.4.5-lts.1",
+    "cloudinary": "^2.5.1",
+    "nodemailer": "^6.9.16",
+    "openai": "^4.77.0",
+    "crypto": "^1.0.1",
+    "uuid": "^11.0.4",
+    "winston": "^3.17.0",
+    "http-errors": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/compression": "^1.7.5",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/multer": "^1.4.12",
+    "@types/nodemailer": "^6.4.17",
+    "@types/http-errors": "^2.0.4",
+    "@types/uuid": "^10.0.0",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
