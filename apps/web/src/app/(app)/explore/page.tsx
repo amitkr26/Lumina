@@ -27,6 +27,7 @@ export default function ExplorePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [trending, setTrending] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [query, setQuery] = useState('');
@@ -55,6 +56,7 @@ export default function ExplorePage() {
       setHasMore(!!data.data.nextCursor);
     } catch (err) {
       console.error('Failed to load explore:', err);
+      setError('Failed to load explore content. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,17 @@ export default function ExplorePage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-1">
-        {loading && posts.length === 0 ? (
+        {error && posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <p className="text-muted-foreground">{error}</p>
+            <button
+              onClick={() => { setError(null); loadExplore(true); }}
+              className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : loading && posts.length === 0 ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
           </div>

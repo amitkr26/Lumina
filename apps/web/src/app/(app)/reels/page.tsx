@@ -202,6 +202,7 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
 export default function ReelsPage() {
   const [reels, setReels] = useState<Reel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
@@ -228,6 +229,7 @@ export default function ReelsPage() {
       setHasMore(!!data.data.nextCursor);
     } catch (err) {
       console.error('Failed to load reels:', err);
+      setError('Failed to load reels. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -242,6 +244,20 @@ export default function ReelsPage() {
       loadReels();
     }
   }, [inView, hasMore, loading, loadReels]);
+
+  if (error && reels.length === 0) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-black text-white gap-4">
+        <p>{error}</p>
+        <button
+          onClick={() => { setError(null); loadReels(true); }}
+          className="px-4 py-2 bg-brand-500 rounded-lg hover:bg-brand-600 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (loading && reels.length === 0) {
     return (
