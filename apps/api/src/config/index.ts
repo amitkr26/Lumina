@@ -5,7 +5,7 @@ export const config = {
   port: parseInt(process.env.PORT || '4000', 10),
   apiUrl: process.env.API_URL || 'http://localhost:4000',
   appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  corsOrigin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'https://lumina-web-drab.vercel.app'],
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   databaseUrl: process.env.DATABASE_URL || '',
 
