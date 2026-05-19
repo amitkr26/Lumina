@@ -4,18 +4,19 @@ services:
     env: node
     plan: free
     region: oregon # Choose your preferred region
-    buildCommand: npm install --include=dev && npm run db:generate && npm run build:api
+    buildCommand: npm install --include=dev && npm run db:generate && npm run build --workspace=@lumina/database && npm run build:api
     startCommand: npm run start --workspace=@lumina/api
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false # Set this in Render dashboard
+        value: postgresql://postgres.npfteutmgmlvgunyzaio:fzDWni6CAK3SCFHq@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+      - key: DIRECT_URL
+        value: postgresql://postgres.npfteutmgmlvgunyzaio:fzDWni6CAK3SCFHq@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+      - key: CORS_ORIGIN
+        value: https://lumina-web-drab.vercel.app
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: lumina-redis
-          property: connectionString
+        value: redis://red-d83i8h6q1p3s73fpvqj0:6379
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
