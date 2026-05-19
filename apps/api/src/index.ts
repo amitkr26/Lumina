@@ -5,6 +5,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+
+(BigInt.prototype as any).toJSON = function () { return Number(this); };
 import { createClient } from 'redis';
 import winston from 'winston';
 import { prisma } from '@lumina/database';
