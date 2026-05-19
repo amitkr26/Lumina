@@ -15,17 +15,20 @@ analyticsRouter.get('/overview', authenticate, asyncHandler(async (req: AuthRequ
       where: { id: req.user!.id },
       include: { _count: { select: { followers: true, following: true } } }
     });
-    const newAnalytics = await prisma.userAnalytics.create({
+    let newAnalytics = await prisma.userAnalytics.create({
       data: {
         userId: req.user!.id,
         totalFollowers: user?._count?.followers || 0,
         totalFollowing: user?._count?.following || 0,
       },
-    });
+    }) as any;
+    if (newAnalytics.totalViews) newAnalytics.totalViews = Number(newAnalytics.totalViews);
     return res.json({ success: true, data: newAnalytics });
   }
 
-  res.json({ success: true, data: analytics });
+  const result = analytics as any;
+  if (result?.totalViews) result.totalViews = Number(result.totalViews);
+  res.json({ success: true, data: result });
 }));
 
 analyticsRouter.get('/posts', authenticate, asyncHandler(async (req: AuthRequest, res) => {
