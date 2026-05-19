@@ -5,7 +5,14 @@ import { logger } from '../index.js';
 let openai: OpenAI | null = null;
 
 if (config.openai.apiKey) {
-  openai = new OpenAI({ apiKey: config.openai.apiKey });
+  openai = new OpenAI({ 
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: config.openai.apiKey,
+    defaultHeaders: {
+      'HTTP-Referer': config.appUrl,
+      'X-Title': 'Lumina',
+    }
+  });
 }
 
 export interface CaptionSuggestion {
@@ -28,7 +35,7 @@ export const generateCaption = async (
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -66,7 +73,7 @@ export const suggestHashtags = async (content: string): Promise<string[]> => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -96,7 +103,7 @@ export const moderateContent = async (
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -129,7 +136,7 @@ export const generateAccessibilityCaption = async (
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -154,7 +161,7 @@ export const categorizeContent = async (content: string): Promise<string[]> => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: [
         {
           role: 'system',

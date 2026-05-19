@@ -44,7 +44,7 @@ export const config = {
   },
 
   openai: {
-    apiKey: process.env.OPENAI_API_KEY || '',
+    apiKey: process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || '',
   },
 
   rateLimit: {
