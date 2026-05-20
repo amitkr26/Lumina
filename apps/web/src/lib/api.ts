@@ -21,7 +21,10 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Do not attempt to refresh on login/register routes
+    const isAuthRoute = originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       originalRequest._retry = true;
       try {
         const { data } = await axios.post(`${API_URL}/api/v1/auth/refresh`, {}, { withCredentials: true });
@@ -34,6 +37,7 @@ api.interceptors.response.use(
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }
+        return Promise.reject(error);
       }
     }
     return Promise.reject(error);

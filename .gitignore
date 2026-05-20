@@ -26,3 +26,5 @@ tmp/
 .vercel
 **/*.db
 **/tsconfig.tsbuildinfo
+**/test-results/
+**/playwright-report/

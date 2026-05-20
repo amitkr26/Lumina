@@ -211,15 +211,19 @@ export const setupSocketIO = (io: Server) => {
     });
   });
 
-  setInterval(async () => {
-    const now = new Date();
-    await prisma.story.deleteMany({
-      where: {
-        expiresAt: { lte: now },
-        isHighlight: false,
-      },
-    });
-  }, 60000);
+  /* setInterval(async () => {
+    try {
+      const now = new Date();
+      await prisma.story.deleteMany({
+        where: {
+          expiresAt: { lte: now },
+          isHighlight: false,
+        },
+      });
+    } catch (err) {
+      logger.error('Failed to cleanup stories:', err);
+    }
+  }, 60000); */
 };
 
 export const getOnlineUsers = (): string[] => {
