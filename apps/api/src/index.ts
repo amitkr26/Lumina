@@ -26,6 +26,9 @@ import { bookmarkRouter } from './routes/bookmark.js';
 import { setupSocketIO } from './websocket/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
+import { validateEnvironment } from './config/index.js';
+
+validateEnvironment();
 
 const app = express();
 const httpServer = createServer(app);
@@ -93,6 +96,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(rateLimiter);
 
+// Request timing
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 1000) {
+      logger.warn(`Slow request: ${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`);
+    }
+  });
+  next();
+});
+
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -131,5 +146,14 @@ const startServer = async () => {
 };
 
 startServer();
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught exception:', err);
+  process.exit(1);
+});
 
 export { io, prisma };

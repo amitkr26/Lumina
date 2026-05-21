@@ -25,8 +25,11 @@ const nextConfig = {
     ];
   },
   async rewrites() {
+    if (!process.env.API_URL) {
+      throw new Error('API_URL environment variable is required for rewrites. Set it in your .env file or environment.');
+    }
     return [
-      { source: '/api/:path*', destination: `${process.env.API_URL || 'https://lumina-api-2573.onrender.com'}/api/:path*` },
+      { source: '/api/:path*', destination: `${process.env.API_URL}/api/:path*` },
     ];
   },
 };

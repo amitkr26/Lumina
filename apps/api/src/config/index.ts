@@ -5,19 +5,19 @@ export const config = {
   port: parseInt(process.env.PORT || '4000', 10),
   apiUrl: process.env.API_URL || 'http://localhost:4000',
   appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  corsOrigin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'https://lumina-web-drab.vercel.app'],
+  corsOrigin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   databaseUrl: process.env.DATABASE_URL || '',
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+    secret: process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev-jwt-refresh-secret-change-in-production',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   },
 
   session: {
-    secret: process.env.SESSION_SECRET || 'dev-session-secret',
+    secret: process.env.SESSION_SECRET || 'dev-session-secret-change-in-production',
   },
 
   cloudinary: {
@@ -52,6 +52,31 @@ export const config = {
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
   },
 };
+
+export function validateEnvironment() {
+  const isProd = config.nodeEnv === 'production';
+  const missing: string[] = [];
+
+  if (!config.databaseUrl) missing.push('DATABASE_URL');
+  if (!config.jwt.secret || config.jwt.secret === 'dev-jwt-secret-change-in-production') {
+    if (isProd) missing.push('JWT_SECRET');
+  }
+  if (!config.jwt.refreshSecret || config.jwt.refreshSecret === 'dev-jwt-refresh-secret-change-in-production') {
+    if (isProd) missing.push('JWT_REFRESH_SECRET');
+  }
+
+  if (missing.length > 0) {
+    const msg = `Missing required environment variables: ${missing.join(', ')}`;
+    if (isProd) {
+      throw new Error(msg);
+    }
+    console.warn(`[WARN] ${msg}`);
+  }
+
+  if (isProd && !config.corsOrigin.some((o) => o !== 'http://localhost:3000')) {
+    console.warn('[WARN] CORS_ORIGIN only allows localhost in production mode');
+  }
+}
 
 // Validation schemas
 export const emailSchema = z.string().email();

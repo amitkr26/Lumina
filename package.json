@@ -23,11 +23,13 @@
     "test": "npm run test --workspaces --if-present",
     "test:e2e": "npm run test:e2e --workspace=@lumina/web",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "env:check": "node -r ts-node/register scripts/envCheck.ts"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
     "supabase": "^2.98.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
   "engines": {

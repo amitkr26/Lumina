@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '@/lib/auth-store';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -8,6 +8,23 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
+
+let isRefreshing = false;
+let refreshQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+function processRefreshQueue(newToken: string | null) {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (newToken) {
+      resolve(newToken);
+    } else {
+      reject(new Error('Refresh failed'));
+    }
+  });
+  refreshQueue = [];
+}
 
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
@@ -19,28 +36,57 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    // Do not attempt to refresh on login/register routes
-    const isAuthRoute = originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register');
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+    if (!originalRequest) return Promise.reject(error);
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
-      originalRequest._retry = true;
-      try {
-        const { data } = await axios.post(`${API_URL}/api/v1/auth/refresh`, {}, { withCredentials: true });
-        const newToken = data.data.accessToken;
+    const isAuthRoute =
+      originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/register') ||
+      originalRequest.url?.includes('/auth/refresh');
+
+    if (error.response?.status !== 401 || originalRequest._retry || isAuthRoute) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      })
+        .then((newToken) => {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalRequest);
+        })
+        .catch(() => Promise.reject(error));
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const { data } = await axios.post(
+        `${API_URL}/api/v1/auth/refresh`,
+        {},
+        { withCredentials: true }
+      );
+      const newToken = data.data?.accessToken;
+      if (newToken) {
         useAuthStore.getState().setAccessToken(newToken);
+        processRefreshQueue(newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
-      } catch {
-        useAuthStore.getState().logout();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
       }
+      throw new Error('No access token in refresh response');
+    } catch (refreshError) {
+      useAuthStore.getState().logout();
+      processRefreshQueue(null);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
     }
-    return Promise.reject(error);
   }
 );
 

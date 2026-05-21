@@ -12,8 +12,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Limit workers due to Prisma pooler connection_limit=1 constraint.
+     Each worker holds one DB connection; running more than 2 parallel
+     workers causes connection starvation and test timeouts. */
+  workers: process.env.CI ? 1 : parseInt(process.env.PLAYWRIGHT_WORKERS || '2', 10),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

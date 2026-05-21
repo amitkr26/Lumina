@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
-import { prisma } from '@lumina/database';
+import { prisma, prismaBg } from '@lumina/database';
 import { logger } from '../index.js';
 import { createNotification } from '../services/notification.js';
 
@@ -211,10 +211,10 @@ export const setupSocketIO = (io: Server) => {
     });
   });
 
-  /* setInterval(async () => {
+  setInterval(async () => {
     try {
       const now = new Date();
-      await prisma.story.deleteMany({
+      await prismaBg.story.deleteMany({
         where: {
           expiresAt: { lte: now },
           isHighlight: false,
@@ -223,7 +223,7 @@ export const setupSocketIO = (io: Server) => {
     } catch (err) {
       logger.error('Failed to cleanup stories:', err);
     }
-  }, 60000); */
+  }, 60000);
 };
 
 export const getOnlineUsers = (): string[] => {

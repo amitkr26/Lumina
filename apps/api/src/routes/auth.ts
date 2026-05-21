@@ -1,13 +1,15 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '@lumina/database';
 import { asyncHandler, AppError } from '../middleware/errorHandler.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { authRateLimiter, strictRateLimiter } from '../middleware/rateLimiter.js';
-import { generateTokens, verifyRefreshToken, generateOtpCode, generateVerificationToken, generatePasswordResetToken } from '../utils/tokens.js';
+import { generateTokens, verifyRefreshToken, generateOtpCode, generatePasswordResetToken } from '../utils/tokens.js';
 import { sendVerificationEmail, sendOtpEmail, sendPasswordResetEmail } from '../services/email.js';
 import { redisClient } from '../index.js';
+import { config } from '../config/index.js';
 
 export const authRouter = Router();
 
@@ -259,7 +261,7 @@ authRouter.post('/reset-password', authRateLimiter, asyncHandler(async (req, res
   const { token, password } = resetPasswordSchema.parse(req.body);
 
   const decoded = z.object({ email: z.string().email() }).parse(
-    require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'dev-secret')
+    jwt.verify(token, config.jwt.secret)
   );
 
   const passwordHash = await bcrypt.hash(password, 12);

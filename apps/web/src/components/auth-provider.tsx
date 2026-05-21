@@ -1,35 +1,46 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { authApi } from '@/lib/api';
+import { AxiosError } from 'axios';
 
 interface AuthContextType {
   isLoading: boolean;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<boolean>;
 }
 
-const AuthContext = createContext<AuthContextType>({ isLoading: true, refreshUser: async () => {} });
+const AuthContext = createContext<AuthContextType>({ isLoading: true, refreshUser: async () => false });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setUser, setAccessToken, isAuthenticated } = useAuthStore();
+  const { setUser, setAccessToken, isAuthenticated, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
+  const refreshAttempted = useRef(false);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const { data } = await authApi.getMe();
       setUser(data.data);
-    } catch {
-      setUser(null);
+      return true;
+    } catch (err) {
+      const axiosErr = err as AxiosError;
+      if (axiosErr.response?.status === 401) {
+        logout();
+      }
+      return false;
     }
-  };
+  }, [setUser, logout]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      refreshUser();
+    const currentAuthState = useAuthStore.getState().isAuthenticated;
+
+    if (currentAuthState && !refreshAttempted.current) {
+      refreshAttempted.current = true;
+      refreshUser().finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, []);
+  }, [refreshUser]);
 
   return (
     <AuthContext.Provider value={{ isLoading, refreshUser }}>
