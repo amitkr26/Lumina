@@ -25,11 +25,12 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    if (!process.env.API_URL) {
+    const apiUrl = process.env.API_URL?.trim();
+    if (!apiUrl) {
       throw new Error('API_URL environment variable is required for rewrites. Set it in your .env file or environment.');
     }
     return [
-      { source: '/api/:path*', destination: `${process.env.API_URL}/api/:path*` },
+      { source: '/api/:path*', destination: `${apiUrl}/api/:path*` },
     ];
   },
 };
